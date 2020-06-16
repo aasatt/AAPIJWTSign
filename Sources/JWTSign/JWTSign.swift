@@ -51,6 +51,16 @@ struct APNSClaims: Claims {
     
 }
 
+struct ZoomClaims: Claims {
+    let iss: String
+    let exp: Date
+
+    init(issuer: String) {
+        iss = issuer
+        exp = Date().addingTimeInterval(7_000_000)
+    }
+}
+
 
 public class JWTSign {
     
@@ -85,6 +95,19 @@ public class JWTSign {
         let claims = APNSClaims(issuer: issuer)
         var jwt = JWT(header: header, claims: claims)
         let signer = JWTSigner.es256(privateKey: key)
+        do {
+            return try jwt.sign(using: signer)
+        } catch {
+            print(error)
+        }
+        return nil
+    }
+
+    public static func getZoomToken(apiKey: String, secret: String) -> String? {
+        let header = Header(typ: "JWT")
+        let claims = ZoomClaims(issuer: apiKey)
+        var jwt = JWT(header: header, claims: claims)
+        let signer = JWTSigner.hs256(key: secret.data(using: .utf8)!)
         do {
             return try jwt.sign(using: signer)
         } catch {
